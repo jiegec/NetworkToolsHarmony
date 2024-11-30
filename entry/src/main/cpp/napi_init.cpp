@@ -47,10 +47,6 @@ char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen) {
         inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr), s, maxlen);
         break;
 
-    case AF_PACKET:
-        snprintf(s, maxlen, "AF_PACKET");
-        break;
-
     default:
         snprintf(s, maxlen, "Unknown AF: %d", sa->sa_family);
         return NULL;
@@ -69,7 +65,10 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
     struct ifaddrs *p = ifaddrs;
     int length = 0;
     while (p) {
-        length++;
+        // skip af_packet
+        if (p->ifa_addr->sa_family != AF_PACKET) {
+            length++;
+        }
         p = p->ifa_next;
     }
 
@@ -77,7 +76,12 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
     napi_create_array_with_length(env, length, &arr);
 
     p = ifaddrs;
-    for (int i = 0; i < length; ++i) {
+    for (int i = 0; p; p = p->ifa_next) {
+        // skip af_packet
+        if (p->ifa_addr->sa_family == AF_PACKET) {
+            continue;
+        }
+
         // fill each entry with an object
         napi_value obj;
         napi_create_object(env, &obj);
@@ -121,8 +125,7 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
         napi_set_named_property(env, obj, "dstaddr", dstaddr_str);
 
         napi_set_element(env, arr, i, obj);
-
-        p = p->ifa_next;
+        i++;
     }
 
     freeifaddrs(ifaddrs);

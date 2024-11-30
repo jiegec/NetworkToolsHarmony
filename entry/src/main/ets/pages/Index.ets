@@ -4,24 +4,19 @@ import testNapi from 'libentry.so'
 @Entry
 @Component
 struct Index {
-  @State message: string = 'Hello World'
+  @State intf: object[] = testNapi.getifaddrs()
 
   build() {
-    Row() {
-      Column() {
-        Text(this.message)
-          .fontSize(50)
-          .fontWeight(FontWeight.Bold)
-          .onClick(() => {
-            hilog.info(0x0000, 'testTag', 'Test NAPI 2 + 3 = %{public}d', testNapi.add(2, 3));
-            let intf = testNapi.getifaddrs();
-            for (let name of intf) {
-              hilog.info(0x0000, 'testTag', 'Got interface %{public}s', JSON.stringify(name));
-            }
-          })
-      }
-      .width('100%')
+    List() {
+      ForEach(this.intf, (item: object) => {
+        ListItem() {
+          Row() {
+            Text(JSON.stringify(item)).fontSize(15)
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.Start)
+        }
+      })
     }
-    .height('100%')
   }
 }
