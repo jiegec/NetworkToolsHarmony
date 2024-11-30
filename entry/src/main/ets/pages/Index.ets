@@ -16,7 +16,7 @@ struct Index {
             hilog.info(0x0000, 'testTag', 'Test NAPI 2 + 3 = %{public}d', testNapi.add(2, 3));
             let intf = testNapi.getifaddrs();
             for (let name of intf) {
-              hilog.info(0x0000, 'testTag', 'Got interface %{public}s', name);
+              hilog.info(0x0000, 'testTag', 'Got interface %{public}s', JSON.stringify(name));
             }
           })
       }

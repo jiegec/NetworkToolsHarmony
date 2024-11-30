@@ -1,8 +1,10 @@
 #include "napi/native_api.h"
 #include <sys/types.h>
+#include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <vector>
 #include <string>
+#include <assert.h>
 
 static napi_value Add(napi_env env, napi_callback_info info) {
     size_t argc = 2;
@@ -28,28 +30,102 @@ static napi_value Add(napi_env env, napi_callback_info info) {
     return sum;
 }
 
+// https://gist.github.com/jkomyno/45bee6e79451453c7bbdc22d033a282e
+
+char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen) {
+    if (!sa) {
+        strncpy(s, "Empty addr", maxlen);
+        return NULL;
+    }
+
+    switch (sa->sa_family) {
+    case AF_INET:
+        inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr), s, maxlen);
+        break;
+
+    case AF_INET6:
+        inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr), s, maxlen);
+        break;
+
+    case AF_PACKET:
+        snprintf(s, maxlen, "AF_PACKET");
+        break;
+
+    default:
+        snprintf(s, maxlen, "Unknown AF: %d", sa->sa_family);
+        return NULL;
+    }
+
+    return s;
+}
+
+
 static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
     struct ifaddrs *ifaddrs;
     int res = getifaddrs(&ifaddrs);
-    std::vector<std::string> addrs;
-    if (res == 0) {
-        struct ifaddrs *p = ifaddrs;
-        while (p) {
-            addrs.push_back(p->ifa_name);
-            p = p->ifa_next;
-        }
-        freeifaddrs(ifaddrs);
+    assert(res == 0);
+
+    // compute length
+    struct ifaddrs *p = ifaddrs;
+    int length = 0;
+    while (p) {
+        length++;
+        p = p->ifa_next;
     }
 
     napi_value arr;
-    napi_create_array_with_length(env, addrs.size(), &arr);
+    napi_create_array_with_length(env, length, &arr);
 
-    for (size_t i = 0; i < addrs.size(); ++i) {
-        napi_value str;
-        napi_create_string_utf8(env, addrs[i].c_str(), NAPI_AUTO_LENGTH, &str);
-        napi_set_element(env, arr, i, str);
+    p = ifaddrs;
+    for (int i = 0; i < length; ++i) {
+        // fill each entry with an object
+        napi_value obj;
+        napi_create_object(env, &obj);
+
+        // name
+        napi_value name_str;
+        napi_create_string_utf8(env, p->ifa_name, NAPI_AUTO_LENGTH, &name_str);
+        napi_set_named_property(env, obj, "name", name_str);
+
+        // flags
+        napi_value flags_int;
+        napi_create_int32(env, p->ifa_flags, &flags_int);
+        napi_set_named_property(env, obj, "flags", flags_int);
+
+        // addr
+        char addr_buffer[64];
+        napi_value addr_str;
+        get_ip_str(p->ifa_addr, addr_buffer, sizeof(addr_buffer));
+        napi_create_string_utf8(env, addr_buffer, NAPI_AUTO_LENGTH, &addr_str);
+        napi_set_named_property(env, obj, "addr", addr_str);
+
+        // netmask
+        char netmask_buffer[64];
+        napi_value netmask_str;
+        get_ip_str(p->ifa_netmask, netmask_buffer, sizeof(netmask_buffer));
+        napi_create_string_utf8(env, netmask_buffer, NAPI_AUTO_LENGTH, &netmask_str);
+        napi_set_named_property(env, obj, "netmask", netmask_str);
+
+        // broadaddr
+        char broadaddr_buffer[64];
+        napi_value broadaddr_str;
+        get_ip_str(p->ifa_broadaddr, broadaddr_buffer, sizeof(broadaddr_buffer));
+        napi_create_string_utf8(env, broadaddr_buffer, NAPI_AUTO_LENGTH, &broadaddr_str);
+        napi_set_named_property(env, obj, "broadaddr", broadaddr_str);
+
+        // dstaddr
+        char dstaddr_buffer[64];
+        napi_value dstaddr_str;
+        get_ip_str(p->ifa_dstaddr, dstaddr_buffer, sizeof(dstaddr_buffer));
+        napi_create_string_utf8(env, dstaddr_buffer, NAPI_AUTO_LENGTH, &dstaddr_str);
+        napi_set_named_property(env, obj, "dstaddr", dstaddr_str);
+
+        napi_set_element(env, arr, i, obj);
+
+        p = p->ifa_next;
     }
 
+    freeifaddrs(ifaddrs);
     return arr;
 }
 
