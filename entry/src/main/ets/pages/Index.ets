@@ -1,5 +1,4 @@
-import { hilog } from '@kit.PerformanceAnalysisKit';
-import testNapi from 'libentry.so';
+import nativeNapi from 'libentry.so';
 import { connection } from '@kit.NetworkKit';
 
 function get_nets() {
@@ -7,14 +6,13 @@ function get_nets() {
   const nets = connection.getAllNetsSync();
   for (const net of nets) {
     let prop = connection.getConnectionPropertiesSync(net);
-    hilog.info(0x0000, 'testTag', '%{public}s', JSON.stringify(prop));
     res.set(prop.interfaceName, prop);
   }
   return res;
 }
 
 // get interface info in `ip a` format
-function format_addrs(intf: testNapi.Interface[]) {
+function format_addrs(intf: nativeNapi.Interface[]) {
   intf = intf.sort((a, b) => a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
   let res: string[] = [];
   let i = 1;
@@ -86,7 +84,7 @@ struct Index {
   }
 
   @State intf: string[] =
-    format_addrs(testNapi.get_intf_addrs());
+    format_addrs(nativeNapi.get_intf_addrs());
   @State routes: string[] =
     get_routes();
 
