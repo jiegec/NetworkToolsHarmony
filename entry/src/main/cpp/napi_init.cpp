@@ -6,6 +6,7 @@
 #include <string>
 #include <assert.h>
 #include <linux/if_link.h>
+#include <linux/if.h>
 
 // https://gist.github.com/jkomyno/45bee6e79451453c7bbdc22d033a282e
 
@@ -76,7 +77,38 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
         set_object_property_string(env, obj, "name", p->ifa_name);
 
         // flags
-        set_object_property_int32(env, obj, "flags", p->ifa_flags);
+        std::string flags;
+        std::vector<std::pair<int, std::string>> all_flags = {
+            {IFF_UP, "UP"},
+            {IFF_BROADCAST, "BROADCAST"},
+            {IFF_DEBUG, "DEBUG"},
+            {IFF_LOOPBACK, "LOOPBACK"},
+            {IFF_POINTOPOINT, "POINTOPOINT"},
+            {IFF_NOTRAILERS, "NOTRAILERS"},
+            {IFF_RUNNING, "RUNNING"},
+            {IFF_NOARP, "NOARP"},
+            {IFF_PROMISC, "PROMISC"},
+            {IFF_ALLMULTI, "ALLMULTI"},
+            {IFF_MASTER, "MASTER"},
+            {IFF_SLAVE, "SLAVE"},
+            {IFF_MULTICAST, "MULTICAST"},
+            {IFF_PORTSEL, "PORTSEL"},
+            {IFF_AUTOMEDIA, "AUTOMEDIA"},
+            {IFF_DYNAMIC, "DYNAMIC"},
+            {IFF_LOWER_UP, "LOWER_UP"},
+            {IFF_DORMANT, "DORMANT"},
+            {IFF_ECHO, "ECHO"},
+        };
+
+        for (auto entry : all_flags) {
+            if (p->ifa_flags & entry.first) {
+                if (flags.size() != 0) {
+                    flags += ",";
+                }
+                flags += entry.second;
+            }
+        }
+        set_object_property_string(env, obj, "flags", flags.c_str());
 
         if (p->ifa_addr->sa_family == AF_PACKET) {
             // handle af_packet
