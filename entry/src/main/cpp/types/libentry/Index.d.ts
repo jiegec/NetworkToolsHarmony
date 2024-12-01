@@ -11,4 +11,4 @@ declare interface Interface {
     flags: string;
     addrs: Address[] | undefined;
 }
-export const getifaddrs: () => Interface[];
+export const get_intf_addrs: () => Interface[];

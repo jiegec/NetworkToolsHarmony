@@ -74,7 +74,7 @@ int ip6_masklen(struct in6_addr netmask) {
     return 128;
 }
 
-static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
+static napi_value GetIntfAddrs(napi_env env, napi_callback_info info) {
     struct ifaddrs *ifaddrs;
     int res = getifaddrs(&ifaddrs);
     assert(res == 0);
@@ -220,7 +220,7 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports) {
     napi_property_descriptor desc[] = {
-        {"getifaddrs", nullptr, GetIfAddrs, nullptr, nullptr, nullptr, napi_default, nullptr}};
+        {"get_intf_addrs", nullptr, GetIntfAddrs, nullptr, nullptr, nullptr, napi_default, nullptr}};
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;
 }

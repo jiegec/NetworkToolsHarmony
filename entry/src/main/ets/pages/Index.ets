@@ -28,7 +28,7 @@ function format_addrs(intf: testNapi.Interface[]) {
 @Component
 struct Index {
   @State intf: string[] =
-    format_addrs(testNapi.getifaddrs());
+    format_addrs(testNapi.get_intf_addrs());
 
   build() {
     List() {
