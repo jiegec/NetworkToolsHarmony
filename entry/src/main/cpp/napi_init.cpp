@@ -49,6 +49,30 @@ void set_object_property_sockaddr(napi_env env, napi_value obj, const char *key,
     set_object_property_string(env, obj, key_buffer, addr_buffer);
 }
 
+// from: https://github.com/FRRouting/frr/blob/master/lib/prefix.c
+uint8_t ip_masklen(struct in_addr netmask) {
+    uint32_t tmp = ~ntohl(netmask.s_addr);
+
+    /*
+     * clz: count leading zeroes. sadly, the behaviour of this builtin is
+     * undefined for a 0 argument, even though most CPUs give 32
+     */
+    return tmp ? __builtin_clz(tmp) : 32;
+}
+
+int ip6_masklen(struct in6_addr netmask) {
+    if (netmask.s6_addr32[0] != 0xffffffffU)
+        return __builtin_clz(~ntohl(netmask.s6_addr32[0]));
+    if (netmask.s6_addr32[1] != 0xffffffffU)
+        return __builtin_clz(~ntohl(netmask.s6_addr32[1])) + 32;
+    if (netmask.s6_addr32[2] != 0xffffffffU)
+        return __builtin_clz(~ntohl(netmask.s6_addr32[2])) + 64;
+    if (netmask.s6_addr32[3] != 0xffffffffU)
+        return __builtin_clz(~ntohl(netmask.s6_addr32[3])) + 96;
+    /* note __builtin_clz(0) is undefined */
+    return 128;
+}
+
 static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
     struct ifaddrs *ifaddrs;
     int res = getifaddrs(&ifaddrs);
@@ -162,6 +186,15 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
 
             // dstaddr
             set_object_property_sockaddr(env, new_addr, "dstaddr", p->ifa_dstaddr);
+
+            // compute prefix length
+            int masklen = -1;
+            if (p->ifa_addr->sa_family == AF_INET) {
+                masklen = ip_masklen(((struct sockaddr_in *)p->ifa_netmask)->sin_addr);
+            } else if (p->ifa_addr->sa_family == AF_INET6) {
+                masklen = ip6_masklen(((struct sockaddr_in6 *)p->ifa_netmask)->sin6_addr);
+            }
+            set_object_property_int32(env, new_addr, "prefix", masklen);
 
             // append to array
             uint32_t len;
