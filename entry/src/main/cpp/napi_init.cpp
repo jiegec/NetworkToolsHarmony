@@ -3,35 +3,13 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <vector>
+#include <map>
 #include <string>
 #include <assert.h>
 #include <linux/if_link.h>
 #include <linux/if.h>
 
 // https://gist.github.com/jkomyno/45bee6e79451453c7bbdc22d033a282e
-
-char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen) {
-    if (!sa) {
-        strncpy(s, "", maxlen);
-        return NULL;
-    }
-
-    switch (sa->sa_family) {
-    case AF_INET:
-        inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr), s, maxlen);
-        break;
-
-    case AF_INET6:
-        inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr), s, maxlen);
-        break;
-
-    default:
-        snprintf(s, maxlen, "Unknown AF: %d", sa->sa_family);
-        return NULL;
-    }
-
-    return s;
-}
 
 void set_object_property_string(napi_env env, napi_value obj, const char *key, const char *value) {
     napi_value str;
@@ -46,10 +24,29 @@ void set_object_property_int32(napi_env env, napi_value obj, const char *key, in
 }
 
 void set_object_property_sockaddr(napi_env env, napi_value obj, const char *key, const struct sockaddr *value) {
+    if (!value) {
+        return;
+    }
+
     char addr_buffer[64] = {0};
+    char key_buffer[64] = {0};
     napi_value addr_str;
-    get_ip_str(value, addr_buffer, sizeof(addr_buffer));
-    set_object_property_string(env, obj, key, addr_buffer);
+
+    switch (value->sa_family) {
+    case AF_INET:
+        inet_ntop(AF_INET, &(((struct sockaddr_in *)value)->sin_addr), addr_buffer, sizeof(addr_buffer));
+        snprintf(key_buffer, sizeof(key_buffer), "ipv4_%s", key);
+        break;
+
+    case AF_INET6:
+        inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)value)->sin6_addr), addr_buffer, sizeof(addr_buffer));
+        snprintf(key_buffer, sizeof(key_buffer), "ipv6_%s", key);
+        break;
+
+    default:
+        return;
+    }
+    set_object_property_string(env, obj, key_buffer, addr_buffer);
 }
 
 static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
@@ -58,23 +55,41 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
     assert(res == 0);
 
     // compute length
+    std::vector<std::string> ifaces;
     struct ifaddrs *p = ifaddrs;
-    int length = 0;
     while (p) {
+        // collect iface names
+        ifaces.push_back(p->ifa_name);
         p = p->ifa_next;
     }
 
-    napi_value arr;
-    napi_create_array_with_length(env, length, &arr);
+    // sort and unique
+    // https://stackoverflow.com/questions/1041620/whats-the-most-efficient-way-to-erase-duplicates-and-sort-a-vector
+    std::sort(ifaces.begin(), ifaces.end());
+    ifaces.erase(std::unique(ifaces.begin(), ifaces.end()), ifaces.end());
 
-    p = ifaddrs;
-    for (int i = 0; p; p = p->ifa_next) {
-        // fill each entry with an object
+    napi_value arr;
+    napi_create_array_with_length(env, ifaces.size(), &arr);
+
+    // create a object for each interface
+    std::map<std::string, napi_value> iface_map;
+    for (int i = 0; i < ifaces.size(); i++) {
         napi_value obj;
         napi_create_object(env, &obj);
 
+        // add to result arr
+        napi_set_element(env, arr, i, obj);
+
         // name
-        set_object_property_string(env, obj, "name", p->ifa_name);
+        set_object_property_string(env, obj, "name", ifaces[i].c_str());
+        iface_map[ifaces[i]] = obj;
+    }
+
+    // iterate again
+    p = ifaddrs;
+    for (; p; p = p->ifa_next) {
+        // find corresponding object
+        napi_value obj = iface_map[p->ifa_name];
 
         // flags
         std::string flags;
@@ -121,21 +136,38 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
                 set_object_property_int32(env, obj, "rx_bytes", stats->rx_bytes);
             }
         } else {
+            // create addrs array if nonexistent
+            bool result = false;
+            napi_has_named_property(env, obj, "addrs", &result);
+            napi_value addrs;
+            if (!result) {
+                napi_create_array(env, &addrs);
+                napi_set_named_property(env, obj, "addrs", addrs);
+            } else {
+                napi_get_named_property(env, obj, "addrs", &addrs);
+            }
+
+            // add new addr
+            napi_value new_addr;
+            napi_create_object(env, &new_addr);
+
             // addr
-            set_object_property_sockaddr(env, obj, "addr", p->ifa_addr);
+            set_object_property_sockaddr(env, new_addr, "addr", p->ifa_addr);
 
             // netmask
-            set_object_property_sockaddr(env, obj, "netmask", p->ifa_netmask);
+            set_object_property_sockaddr(env, new_addr, "netmask", p->ifa_netmask);
 
             // broadaddr
-            set_object_property_sockaddr(env, obj, "broadaddr", p->ifa_broadaddr);
+            set_object_property_sockaddr(env, new_addr, "broadaddr", p->ifa_broadaddr);
 
             // dstaddr
-            set_object_property_sockaddr(env, obj, "dstaddr", p->ifa_dstaddr);
-        }
+            set_object_property_sockaddr(env, new_addr, "dstaddr", p->ifa_dstaddr);
 
-        napi_set_element(env, arr, i, obj);
-        i++;
+            // append to array
+            uint32_t len;
+            napi_get_array_length(env, addrs, &len);
+            napi_set_element(env, addrs, len, new_addr);
+        }
     }
 
     freeifaddrs(ifaddrs);
