@@ -4,6 +4,7 @@ declare interface Interface {
     ipv6_addr: string | undefined;
     ipv6_broadaddr: string | undefined;
     prefix: number;
+    mac: string | undefined;
 }
 declare interface Interface {
     name: string;

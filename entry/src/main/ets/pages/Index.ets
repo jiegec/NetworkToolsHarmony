@@ -7,6 +7,9 @@ function format_addrs(intf: testNapi.Interface[]) {
   let i = 1;
   for (let entry of intf) {
     res.push(`${i}: ${entry.name}: <${entry.flags}>`);
+    if (entry.mac !== undefined) {
+      res.push(`    link/ether ${entry.mac} brd ff:ff:ff:ff:ff:ff`);
+    }
     if (entry.addrs !== undefined) {
       for (let addr of entry.addrs) {
         if (addr.ipv4_addr !== undefined) {

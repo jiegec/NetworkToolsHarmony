@@ -7,6 +7,7 @@
 #include <string>
 #include <assert.h>
 #include <linux/if_link.h>
+#include <linux/if_packet.h>
 #include <linux/if.h>
 
 // https://gist.github.com/jkomyno/45bee6e79451453c7bbdc22d033a282e
@@ -151,6 +152,14 @@ static napi_value GetIfAddrs(napi_env env, napi_callback_info info) {
 
         if (p->ifa_addr->sa_family == AF_PACKET) {
             // handle af_packet
+            // parse mac address
+            struct sockaddr_ll *addr = (struct sockaddr_ll *)p->ifa_addr;
+            char mac_buffer[64];
+            snprintf(mac_buffer, sizeof(mac_buffer), "%02x:%02x:%02x:%02x:%02x:%02x", addr->sll_addr[0],
+                     addr->sll_addr[1], addr->sll_addr[2], addr->sll_addr[3], addr->sll_addr[4], addr->sll_addr[5]);
+            set_object_property_string(env, obj, "mac", mac_buffer);
+
+            // parse statistics
             if (p->ifa_data) {
                 struct rtnl_link_stats *stats = (struct rtnl_link_stats *)p->ifa_data;
 
