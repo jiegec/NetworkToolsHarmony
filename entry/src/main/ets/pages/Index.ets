@@ -38,7 +38,7 @@ function format_addrs(intf: nativeNapi.Interface[]) {
     }
     i += 1;
   }
-  return res;
+  return res.join('\n');
 }
 
 // get routing table in `ip r` format + dns info
@@ -58,7 +58,7 @@ function get_routes() {
       res.push(`${dns.address}`);
     }
   }
-  return res;
+  return res.join('\n');
 }
 
 @Entry
@@ -83,23 +83,34 @@ struct Index {
     })
   }
 
-  @State intf: string[] =
-    format_addrs(nativeNapi.get_intf_addrs());
-  @State routes: string[] =
-    get_routes();
+  @State intf: string = '';
+  @State routes: string = '';
 
-  @Builder
-  listBuilder(data: string[]) {
-    List() {
-      ForEach(data, (item: string) => {
-        ListItem() {
-          Row() {
-            Text(item).fontSize(10).fontFamily('monospace')
-          }
-          .width('100%')
-          .justifyContent(FlexAlign.Start)
-        }
-      })
+  update() {
+    this.intf = format_addrs(nativeNapi.get_intf_addrs());
+    this.routes = get_routes();
+  }
+
+  private conn: connection.NetConnection | null = null
+  onPageShow() {
+    this.update();
+
+    // monitor network change
+    const conn: connection.NetConnection = connection.createNetConnection();
+    this.conn = conn;
+    conn.register((error) => {
+      conn.on('netAvailable', () => { this.update(); });
+      conn.on('netBlockStatusChange', () => { this.update(); });
+      conn.on('netCapabilitiesChange', () => { this.update(); });
+      conn.on('netConnectionPropertiesChange', () => { this.update(); });
+      conn.on('netLost', () => { this.update(); });
+      conn.on('netUnavailable', () => { this.update(); });
+    });
+  }
+
+  onPageHide() {
+    if (this.conn !== null) {
+      this.conn.unregister((error) => {});
     }
   }
 
@@ -107,11 +118,13 @@ struct Index {
     Column() {
       Tabs({ barPosition: BarPosition.End, controller: this.controller }) {
         TabContent() {
-          this.listBuilder(this.intf)
+          Scroll() {
+            Text(this.intf).fontSize(10).fontFamily('monospace').width('100%')
+          }
         }.tabBar(this.tabBuilder(0, 'Interface'))
 
         TabContent() {
-          this.listBuilder(this.routes)
+          Text(this.routes).fontSize(10).fontFamily('monospace').width('100%')
         }.tabBar(this.tabBuilder(1, 'Routing & DNS'))
       }
       .width('100%')
