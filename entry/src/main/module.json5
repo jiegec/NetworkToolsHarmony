@@ -7,6 +7,18 @@
     "deviceTypes": [
       "phone"
     ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.GET_NETWORK_INFO",
+        "reason": "$string:EntryAbility_get_network_info_permission",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        }
+      },
+    ],
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",

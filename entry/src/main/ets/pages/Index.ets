@@ -1,12 +1,31 @@
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import testNapi from 'libentry.so'
+import testNapi from 'libentry.so';
+import { connection } from '@kit.NetworkKit';
 
+function get_nets() {
+  let res: Map<string, connection.ConnectionProperties> = new Map();
+  const nets = connection.getAllNetsSync();
+  for (const net of nets) {
+    let prop = connection.getConnectionPropertiesSync(net);
+    hilog.info(0x0000, 'testTag', '%{public}s', JSON.stringify(prop));
+    res.set(prop.interfaceName, prop);
+  }
+  return res;
+}
+
+// get interface info in `ip a` format
 function format_addrs(intf: testNapi.Interface[]) {
   intf = intf.sort((a, b) => a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
   let res: string[] = [];
   let i = 1;
+  const nets = get_nets();
   for (let entry of intf) {
-    res.push(`${i}: ${entry.name}: <${entry.flags}>`);
+    let net = nets.get(entry.name);
+    if (net !== undefined) {
+      res.push(`${i}: ${entry.name}: <${entry.flags}> mtu ${net.mtu}`);
+    } else {
+      res.push(`${i}: ${entry.name}: <${entry.flags}>`);
+    }
     if (entry.mac !== undefined) {
       res.push(`    link/ether ${entry.mac} brd ff:ff:ff:ff:ff:ff`);
     }
@@ -24,11 +43,29 @@ function format_addrs(intf: testNapi.Interface[]) {
   return res;
 }
 
+// get routing table in `ip r` format + dns info
+function get_routes() {
+  let res: string[] = [];
+  const nets = get_nets();
+  res.push(`Routing Table:`);
+  for (const net of nets) {
+    for (const route of net[1].routes) {
+      res.push(`${route.destination.address.address}/${route.destination.prefixLength} via ${route.gateway.address} dev ${route.interface}`);
+    }
+  }
+
+  for (const net of nets) {
+    res.push(`DNS Servers for ${net[0]}:`);
+    for (const dns of net[1].dnses) {
+      res.push(`${dns.address}`);
+    }
+  }
+  return res;
+}
+
 @Entry
 @Component
 struct Index {
-  @State intf: string[] =
-    format_addrs(testNapi.get_intf_addrs());
   // https://www.cnblogs.com/wgjava/p/18454731
   controller: TabsController = new TabsController()
   @State current: number = 0
@@ -48,26 +85,36 @@ struct Index {
     })
   }
 
+  @State intf: string[] =
+    format_addrs(testNapi.get_intf_addrs());
+  @State routes: string[] =
+    get_routes();
+
+  @Builder
+  listBuilder(data: string[]) {
+    List() {
+      ForEach(data, (item: string) => {
+        ListItem() {
+          Row() {
+            Text(item).fontSize(10).fontFamily('monospace')
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.Start)
+        }
+      })
+    }
+  }
+
   build() {
     Column() {
       Tabs({ barPosition: BarPosition.End, controller: this.controller }) {
         TabContent() {
-          List() {
-            ForEach(this.intf, (item: string) => {
-              ListItem() {
-                Row() {
-                  Text(item).fontSize(10).fontFamily('monospace')
-                }
-                .width('100%')
-                .justifyContent(FlexAlign.Start)
-              }
-            })
-          }
+          this.listBuilder(this.intf)
         }.tabBar(this.tabBuilder(0, 'Interface'))
 
         TabContent() {
-          Text('TODO').backgroundColor('#f2f2f2')
-        }.tabBar(this.tabBuilder(1, 'Ping'))
+          this.listBuilder(this.routes)
+        }.tabBar(this.tabBuilder(1, 'Routing & DNS'))
       }
       .width('100%')
       .backgroundColor('#f2f2f2')

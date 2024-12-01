@@ -2,6 +2,7 @@ import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { abilityAccessCtrl, bundleManager, Permissions } from '@kit.AbilityKit';
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -31,6 +32,11 @@ export default class EntryAbility extends UIAbility {
         data.setWindowKeepScreenOn(true, (err: BusinessError) => {
         });
       }
+    });
+
+    // request for permission
+    const atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
+    atManager.requestPermissionsFromUser(this.context, ['ohos.permission.GET_NETWORK_INFO']).then((data) => {
     });
   }
 

@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "Network Tools"
+    },
+    {
+      "name": "EntryAbility_get_network_info_permission",
+      "value": "Get network info for display"
     }
   ]
 }
