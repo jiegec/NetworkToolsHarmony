@@ -29,18 +29,55 @@ function format_addrs(intf: testNapi.Interface[]) {
 struct Index {
   @State intf: string[] =
     format_addrs(testNapi.get_intf_addrs());
+  // https://www.cnblogs.com/wgjava/p/18454731
+  controller: TabsController = new TabsController()
+  @State current: number = 0
+
+  @Builder
+  tabBuilder(index: number, label: string) {
+    Column() {
+      Text(label)
+        .fontSize('12fp')
+        .fontColor(this.current === index ? '#909090' : '#000000')
+        .margin({ top: 3 })
+    }
+    .width('100%')
+    .onClick(() => {
+      this.current = index
+      this.controller.changeIndex(this.current)
+    })
+  }
 
   build() {
-    List() {
-      ForEach(this.intf, (item: string) => {
-        ListItem() {
-          Row() {
-            Text(item).fontSize(10).fontFamily('monospace')
+    Column() {
+      Tabs({ barPosition: BarPosition.End, controller: this.controller }) {
+        TabContent() {
+          List() {
+            ForEach(this.intf, (item: string) => {
+              ListItem() {
+                Row() {
+                  Text(item).fontSize(10).fontFamily('monospace')
+                }
+                .width('100%')
+                .justifyContent(FlexAlign.Start)
+              }
+            })
           }
-          .width('100%')
-          .justifyContent(FlexAlign.Start)
-        }
-      })
+        }.tabBar(this.tabBuilder(0, 'Interface'))
+
+        TabContent() {
+          Text('TODO').backgroundColor('#f2f2f2')
+        }.tabBar(this.tabBuilder(1, 'Ping'))
+      }
+      .width('100%')
+      .backgroundColor('#f2f2f2')
+      .barMode(BarMode.Fixed)
+      .scrollable(true)
+      .onChange(((index: number) => {
+        this.current = index
+      }))
     }
+    .width('100%')
+    .backgroundColor('#ffffff')
   }
 }

@@ -28,7 +28,8 @@ export default class EntryAbility extends UIAbility {
     windowStage.getMainWindow((err: BusinessError, data: window.Window) => {
       const errCode: number = err.code;
       if (errCode == 0) {
-        data.setWindowKeepScreenOn(true, (err: BusinessError) => { });
+        data.setWindowKeepScreenOn(true, (err: BusinessError) => {
+        });
       }
     });
   }
