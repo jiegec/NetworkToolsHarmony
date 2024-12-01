@@ -4,7 +4,8 @@ import testNapi from 'libentry.so'
 @Entry
 @Component
 struct Index {
-  @State intf: object[] = testNapi.getifaddrs()
+  @State intf: object[] =
+    testNapi.getifaddrs().sort((a, b) => a["name"] < b["name"] ? -1 : (a["name"] > b["name"] ? 1 : 0))
 
   build() {
     List() {
