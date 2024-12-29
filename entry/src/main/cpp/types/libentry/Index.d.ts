@@ -4,11 +4,11 @@ declare interface Address {
     ipv6_addr: string | undefined;
     ipv6_broadaddr: string | undefined;
     prefix: number;
-    mac: string | undefined;
 }
 declare interface Interface {
     name: string;
     flags: string;
+    mac: string | undefined;
     addrs: Address[] | undefined;
 }
 export const get_intf_addrs: () => Interface[];
