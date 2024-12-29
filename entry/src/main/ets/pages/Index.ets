@@ -28,7 +28,7 @@ function format_addrs(intf: nativeNapi.Interface[]) {
       res.push(`    link/ether ${entry.mac} brd ff:ff:ff:ff:ff:ff`);
     }
     if (entry.addrs !== undefined) {
-      for (let addr of entry.addrs) {
+      for (let addr of entry.addrs as nativeNapi.Address[]) {
         if (addr.ipv4_addr !== undefined) {
           res.push(`    inet ${addr.ipv4_addr}/${addr.prefix} brd ${addr.ipv4_broadaddr}`);
         } else if (addr.ipv6_addr !== undefined) {

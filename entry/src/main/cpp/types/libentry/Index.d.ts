@@ -1,4 +1,4 @@
-declare interface Interface {
+declare interface Address {
     ipv4_addr: string | undefined;
     ipv4_broadaddr: string | undefined;
     ipv6_addr: string | undefined;
