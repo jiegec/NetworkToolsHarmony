@@ -1,0 +1,20 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup OpenHarmony SDK
+        uses: openharmony-rs/setup-ohos-sdk@v0.2.0
+      - name: Setup hvigor
+        run: |
+          echo "@ohos:registry=https://repo.harmonyos.com/npm/" >> ~/.npmrc
+          npm install @ohos/hvigor
+          npm install @ohos/hvigor-ohos-plugin
+      - name: Build
+        run: |
+          ./node_modules/@ohos/hvigor/bin/hvigor.js assembleHap
