@@ -18,6 +18,12 @@ jobs:
           mv $OHOS_BASE_SDK_HOME/{ets,js,native,previewer,toolchains} $OHOS_BASE_SDK_HOME/13
           mkdir -p $OHOS_BASE_SDK_HOME/licenses
           cp -r .ci/* $OHOS_BASE_SDK_HOME/licenses
+      - name: Cache arkui-x
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/arkui-x
+          key: "arkui-x"
       - name: Setup arkui-x
         run: |
           export ARKUIX_SDK_HOME=$HOME/arkui-x
@@ -33,3 +39,7 @@ jobs:
       - name: Build
         run: |
           node ./node_modules/@ohos/hvigor/bin/hvigor.js -p product=ohos assembleHap
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hap
+          path: entry/build/ohos/outputs/default/entry-default-unsigned.hap
