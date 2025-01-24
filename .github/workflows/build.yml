@@ -10,6 +10,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup OpenHarmony SDK
         uses: openharmony-rs/setup-ohos-sdk@v0.2.0
+      - name: Move OpenHarmony SDK
+        run: |
+          mkdir -p $OHOS_BASE_SDK_HOME/13
+          mv $OHOS_BASE_SDK_HOME/{ets,js,native,previewer,toolchains} $OHOS_BASE_SDK_HOME/13
+          mkdir -p $OHOS_BASE_SDK_HOME/licenses
+          cp -r .ci/* $OHOS_BASE_SDK_HOME/licenses
       - name: Setup hvigor
         run: |
           echo "@ohos:registry=https://repo.harmonyos.com/npm/" >> ~/.npmrc
