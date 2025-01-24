@@ -12,12 +12,7 @@ jobs:
         uses: openharmony-rs/setup-ohos-sdk@main
         with:
           version: '5.0.1'
-      - name: Move OpenHarmony SDK
-        run: |
-          mkdir -p $OHOS_BASE_SDK_HOME/13
-          mv $OHOS_BASE_SDK_HOME/{ets,js,native,previewer,toolchains} $OHOS_BASE_SDK_HOME/13
-          mkdir -p $OHOS_BASE_SDK_HOME/licenses
-          cp -r .ci/* $OHOS_BASE_SDK_HOME/licenses
+          fixup-path: true
       - name: Cache arkui-x
         id: cache
         uses: actions/cache@v4
