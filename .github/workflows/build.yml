@@ -21,6 +21,7 @@ jobs:
           export ARKUIX_SDK_HOME=$HOME/arkui-x
           mkdir -p $ARKUIX_SDK_HOME/licenses
           cp -r .ci/* $ARKUIX_SDK_HOME/licenses
+          echo "ARKUIX_SDK_HOME=$HOME/arkui-x" >> $GITHUB_ENV
       - name: Setup hvigor
         run: |
           echo "@ohos:registry=https://repo.harmonyos.com/npm/" >> ~/.npmrc
