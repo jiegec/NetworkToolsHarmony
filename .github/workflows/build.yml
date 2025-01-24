@@ -17,4 +17,4 @@ jobs:
           npm install @ohos/hvigor-ohos-plugin
       - name: Build
         run: |
-          ./node_modules/@ohos/hvigor/bin/hvigor.js assembleHap
+          node ./node_modules/@ohos/hvigor/bin/hvigor.js assembleHap
