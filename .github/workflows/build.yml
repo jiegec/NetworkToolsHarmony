@@ -9,7 +9,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup OpenHarmony SDK
-        uses: openharmony-rs/setup-ohos-sdk@v0.2.0
+        uses: openharmony-rs/setup-ohos-sdk@main
+        with:
+          version: '5.0.1'
       - name: Move OpenHarmony SDK
         run: |
           mkdir -p $OHOS_BASE_SDK_HOME/13
