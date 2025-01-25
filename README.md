@@ -7,3 +7,5 @@ How to install:
 1. Use DevEco Studio to open this project
 2. Setup code signing
 3. Run the app in your device
+
+Prebuilt but unsigned hap for OpenHarmonyOS is available in CI artifact.
