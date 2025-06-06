@@ -5,7 +5,8 @@
     "description": "$string:module_desc",
     "mainElement": "EntryAbility",
     "deviceTypes": [
-      "default"
+      "default",
+      "2in1"
     ],
     "requestPermissions": [
       {
