@@ -31,6 +31,7 @@ jobs:
           npm install @ohos/hvigor
           npm install @ohos/hvigor-ohos-plugin
           npm install @ohos/hvigor-ohos-arkui-x-plugin
+          npm list
       - name: Build
         run: |
           node ./node_modules/@ohos/hvigor/bin/hvigor.js -p product=ohos assembleHap
