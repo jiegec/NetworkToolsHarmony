@@ -12,4 +12,8 @@ export PATH=$TOOL_HOME/node/bin:$PATH
 export ARKUIX_SDK_HOME=$HOME/arkui-x
 mkdir -p $ARKUIX_SDK_HOME/licenses
 cp -r .ci/* $ARKUIX_SDK_HOME/licenses
-hvigorw -p product=default assembleHap
+# automatically download ohos-sdk to $HOME/ohos-sdk/13/{ets,js,native,previewer,toolchains}
+export OHOS_BASE_SDK_HOME=$HOME/ohos-sdk
+mkdir -p $OHOS_BASE_SDK_HOME/licenses
+cp -r .ci/* $OHOS_BASE_SDK_HOME/licenses
+hvigorw -p product=ohos assembleHap

@@ -12,6 +12,18 @@
             "caseSensitiveCheck": true,
           }
         }
+      },
+      {
+        "name": "ohos",
+        "signingConfig": "default",
+        "compatibleSdkVersion": 10,
+        "compileSdkVersion": 13,
+        "runtimeOS": "OpenHarmony",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+          }
+        }
       }
     ],
     "buildModeSet": [
@@ -31,7 +43,8 @@
         {
           "name": "default",
           "applyToProducts": [
-            "default"
+            "default",
+            "ohos"
           ]
         }
       ]
