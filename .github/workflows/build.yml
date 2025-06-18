@@ -11,7 +11,7 @@ jobs:
       - name: Setup OpenHarmony SDK
         uses: openharmony-rs/setup-ohos-sdk@main
         with:
-          version: '5.0.1'
+          version: '5.1.0'
           fixup-path: true
       - name: Cache arkui-x
         id: cache
