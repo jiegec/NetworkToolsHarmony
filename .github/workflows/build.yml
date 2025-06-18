@@ -28,9 +28,9 @@ jobs:
       - name: Setup hvigor
         run: |
           echo "@ohos:registry=https://repo.harmonyos.com/npm/" >> ~/.npmrc
-          npm install @ohos/hvigor
-          npm install @ohos/hvigor-ohos-plugin
-          npm install @ohos/hvigor-ohos-arkui-x-plugin
+          npm install @ohos/hvigor@5.18.4
+          npm install @ohos/hvigor-ohos-plugin@5.18.4
+          npm install @ohos/hvigor-ohos-arkui-x-plugin@5.18.4
           npm list
       - name: Build
         run: |
