@@ -25,6 +25,8 @@ jobs:
           mkdir -p $ARKUIX_SDK_HOME/licenses
           cp -r .ci/* $ARKUIX_SDK_HOME/licenses
           echo "ARKUIX_SDK_HOME=$HOME/arkui-x" >> $GITHUB_ENV
+          mkdir -p $OHOS_BASE_SDK_HOME/licenses
+          cp -r .ci/* $OHOS_BASE_SDK_HOME/licenses
       - name: Setup hvigor
         run: |
           echo "@ohos:registry=https://repo.harmonyos.com/npm/" >> ~/.npmrc
