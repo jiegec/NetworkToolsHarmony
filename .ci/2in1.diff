@@ -1,0 +1,35 @@
+diff --git a/entry/build-profile.json5 b/entry/build-profile.json5
+index ad6fd45..4fbe63c 100644
+--- a/entry/build-profile.json5
++++ b/entry/build-profile.json5
+@@ -33,8 +33,7 @@
+       "name": "default",
+       "config": {
+         "deviceType": [
+-          "default",
+-          "2in1"
++          "default"
+         ]
+       }
+     },
+@@ -42,4 +41,4 @@
+       "name": "ohosTest",
+     }
+   ]
+-}
+\ No newline at end of file
++}
+diff --git a/entry/src/main/module.json5 b/entry/src/main/module.json5
+index 76c009c..7b8532f 100644
+--- a/entry/src/main/module.json5
++++ b/entry/src/main/module.json5
+@@ -5,8 +5,7 @@
+     "description": "$string:module_desc",
+     "mainElement": "EntryAbility",
+     "deviceTypes": [
+-      "default",
+-      "2in1"
++      "default"
+     ],
+     "requestPermissions": [
+       {

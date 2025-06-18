@@ -36,6 +36,7 @@ jobs:
           npm list
       - name: Build
         run: |
+          cat .ci/2in1.diff | patch -Np1
           node ./node_modules/@ohos/hvigor/bin/hvigor.js -p product=ohos assembleHap
       - uses: actions/upload-artifact@v4
         with:
