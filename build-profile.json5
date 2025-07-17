@@ -9,9 +9,10 @@
         "runtimeOS": "HarmonyOS",
         "buildOption": {
           "strictMode": {
-            "caseSensitiveCheck": true,
+            "caseSensitiveCheck": true
           }
-        }
+        },
+        "targetSdkVersion": "5.1.1(19)"
       },
       {
         "name": "ohos",
