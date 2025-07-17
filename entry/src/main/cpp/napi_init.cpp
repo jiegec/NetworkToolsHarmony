@@ -1,14 +1,19 @@
 #include "napi/native_api.h"
-#include <sys/types.h>
 #include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <vector>
-#include <map>
-#include <string>
 #include <assert.h>
+#include <ifaddrs.h>
+#include <linux/if.h>
 #include <linux/if_link.h>
 #include <linux/if_packet.h>
-#include <linux/if.h>
+#include <map>
+#include <string>
+#include <sys/types.h>
+#include <vector>
+
+#include "hilog/log.h"
+#undef LOG_TAG
+#define LOG_TAG "testTag"
+
 
 // https://gist.github.com/jkomyno/45bee6e79451453c7bbdc22d033a282e
 
@@ -84,7 +89,12 @@ static napi_value GetIntfAddrs(napi_env env, napi_callback_info info) {
     struct ifaddrs *p = ifaddrs;
     while (p) {
         // collect iface names
-        ifaces.push_back(p->ifa_name);
+        if (p->ifa_name) {
+            OH_LOG_INFO(LOG_APP, "Found interface: %{public}s", p->ifa_name);
+            ifaces.push_back(p->ifa_name);
+        } else {
+            OH_LOG_WARN(LOG_APP, "Get NULL ifa_name");
+        }
         p = p->ifa_next;
     }
 
@@ -150,7 +160,7 @@ static napi_value GetIntfAddrs(napi_env env, napi_callback_info info) {
         }
         set_object_property_string(env, obj, "flags", flags.c_str());
 
-        if (p->ifa_addr->sa_family == AF_PACKET) {
+        if (p->ifa_addr && p->ifa_addr->sa_family == AF_PACKET) {
             // handle af_packet
             // parse mac address
             struct sockaddr_ll *addr = (struct sockaddr_ll *)p->ifa_addr;
@@ -198,9 +208,9 @@ static napi_value GetIntfAddrs(napi_env env, napi_callback_info info) {
 
             // compute prefix length
             int masklen = -1;
-            if (p->ifa_addr->sa_family == AF_INET) {
+            if (p->ifa_addr && p->ifa_addr->sa_family == AF_INET) {
                 masklen = ip_masklen(((struct sockaddr_in *)p->ifa_netmask)->sin_addr);
-            } else if (p->ifa_addr->sa_family == AF_INET6) {
+            } else if (p->ifa_addr && p->ifa_addr->sa_family == AF_INET6) {
                 masklen = ip6_masklen(((struct sockaddr_in6 *)p->ifa_netmask)->sin6_addr);
             }
             set_object_property_int32(env, new_addr, "prefix", masklen);
