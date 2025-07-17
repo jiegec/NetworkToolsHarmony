@@ -42,3 +42,6 @@ jobs:
         with:
           name: hap
           path: entry/build/ohos/outputs/default/entry-default-unsigned.hap
+      - name: Clear licenses folder in cache
+        run: |
+          rm -rf $OHOS_BASE_SDK_HOME/licenses
